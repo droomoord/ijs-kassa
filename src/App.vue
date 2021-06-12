@@ -1,5 +1,17 @@
 <template>
   <div id="app">
+    <loading v-if="loading"> </loading>
+    <modal v-if="modal" @quit="modal = false">
+      <div>
+        <input type="number" v-model="totaal" />
+      </div>
+      <strong>{{ pin ? "pin" : "contant" }}</strong>
+
+      <div class="afslaan-buttons">
+        <div class="afslaan-groen" @click="verstuur">OK</div>
+        <div class="afslaan-rood" @click="modal = false">Cancel</div>
+      </div>
+    </modal>
     <div class="buttons">
       <div>
         <button @click="clicked(1)">
@@ -52,20 +64,36 @@
         alt=""
       />
     </div>
+    <div class="afslaan" v-if="bol1 || bol2 || bol3">
+      <span>Afslaan:</span>
+      <div>
+        <a href="#" @click="afslaan(true)">PIN</a>
+        <a href="#" @click="afslaan(false)">Contant</a>
+      </div>
+    </div>
     <div class="totaal">Totaal: {{ totaalAfgerond }}</div>
+    <a href="#" v-if="bol1 || bol2 || bol3" class="reset" @click="reset"
+      >Reset</a
+    >
   </div>
 </template>
 
 <script>
+import axios from "axios";
+import modal from "./components/modal.vue";
+import loading from "./components/loading.vue";
 export default {
   name: "App",
-  components: {},
+  components: { modal, loading },
   data() {
     return {
       bol1: 0,
       bol2: 0,
       bol3: 0,
       totaal: 0,
+      modal: false,
+      pin: Boolean,
+      loading: false,
     };
   },
   methods: {
@@ -115,10 +143,63 @@ export default {
           break;
       }
     },
+    reset() {
+      this.bol1 = 0;
+      this.bol2 = 0;
+      this.bol3 = 0;
+      this.totaal = 0;
+    },
+    afslaan(pin) {
+      console.log(pin);
+      if (pin) this.pin = true;
+      else this.pin = false;
+      this.modal = true;
+    },
+
+    verstuur: async function() {
+      console.log("-----------------------");
+
+      console.log(this.bol1);
+      console.log(this.bol2);
+      console.log(this.bol3);
+      console.log(this.totaalAfgerond);
+      console.log(this.pin);
+      console.log("-----------------------");
+
+      try {
+        this.loading = true;
+        const config = {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json",
+          },
+        };
+        await axios({
+          method: "post",
+          url: "https://ijs-kassa-api.herokuapp.com/sale",
+          data: {
+            products: {
+              bol1: this.bol1,
+              bol2: this.bol2,
+              bol3: this.bol3,
+            },
+            pin: this.pin,
+            total: this.total,
+          },
+          config,
+        });
+        this.loading = false;
+        this.modal = false;
+        this.reset();
+      } catch (error) {
+        console.log(error);
+        this.loading = false;
+      }
+    },
   },
   computed: {
     totaalAfgerond() {
-      return this.totaal.toFixed(2);
+      return parseFloat(this.totaal).toFixed(2);
     },
   },
 };
@@ -167,5 +248,46 @@ button {
   width: 20px;
   position: relative;
   top: 15px;
+  z-index: -1;
+}
+.afslaan {
+  position: fixed;
+  bottom: 100px;
+  left: 50vw;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.afslaan div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.afslaan div * {
+  border: 1px solid black;
+  padding: 10px;
+}
+.afslaan-buttons {
+  display: flex;
+  gap: 20px;
+}
+.afslaan-groen {
+  color: rgb(0, 0, 0);
+  border: 1px solid rgb(0, 52, 0);
+  background-color: green;
+  padding: 10px;
+}
+.afslaan-rood {
+  color: rgb(0, 0, 0);
+  border: 1px solid rgb(70, 1, 1);
+  background-color: rgb(193, 0, 0);
+  padding: 10px;
+}
+.reset {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  padding: 10px;
+  border: 1px solid black;
 }
 </style>
