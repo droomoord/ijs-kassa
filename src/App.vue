@@ -104,11 +104,11 @@ export default {
           this.bol1++;
           break;
         case 2:
-          this.totaal += 2.6;
+          this.totaal += 2.8;
           this.bol2++;
           break;
         case 3:
-          this.totaal += 3.4;
+          this.totaal += 3.8;
           this.bol3++;
           break;
 
@@ -126,14 +126,14 @@ export default {
           break;
         case 2:
           if (this.totaal > 0 && this.bol2 > 0) {
-            this.totaal -= 2.6;
+            this.totaal -= 2.8;
             this.bol2--;
           }
 
           break;
         case 3:
           if (this.totaal > 0 && this.bol3 > 0) {
-            this.totaal -= 3.4;
+            this.totaal -= 3.8;
             this.bol3--;
           }
 
@@ -150,7 +150,6 @@ export default {
       this.totaal = 0;
     },
     afslaan(pin) {
-      console.log(pin);
       if (pin) this.pin = true;
       else this.pin = false;
       this.modal = true;
@@ -168,26 +167,20 @@ export default {
 
       try {
         this.loading = true;
-        const config = {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": "application/json",
-          },
-        };
-        await axios({
-          method: "post",
-          url: "https://ijs-kassa-api.herokuapp.com/sale",
-          data: {
+
+        await axios.post(
+          "http://localhost:3000/sale",
+          // "/sale",
+          {
             products: {
               bol1: this.bol1,
               bol2: this.bol2,
               bol3: this.bol3,
             },
             pin: this.pin,
-            total: this.total,
-          },
-          config,
-        });
+            total: this.totaalAfgerond,
+          }
+        );
         this.loading = false;
         this.modal = false;
         this.reset();
