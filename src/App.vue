@@ -169,8 +169,8 @@ export default {
         this.loading = true;
 
         await axios.post(
-          "http://localhost:3000/sale",
-          // "/sale",
+          // "http://localhost:3000/sale",
+          "/sale",
           {
             products: {
               bol1: this.bol1,
